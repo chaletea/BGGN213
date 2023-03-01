@@ -1,0 +1,125 @@
+---
+title: "Class 05: Data Visualization with GGPLOT"
+author: "Challana Tea"
+format: pdf
+pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+---
+
+### R Plotting
+
+The following utilizes "base" R visualization
+```{r}
+head(cars, n=10)
+plot(cars)
+
+```
+ggplot is helpful for more complex plots and visualization, but will first need to be installed through install.packages.
+
+```{r}
+
+library(ggplot2)
+ggplot(cars)
+
+```
+Three layers to each ggplot:
+* data (df)
+* aesthetics (aes)
+* geometrics (geom_type)
+
+```{r}
+
+ggplot(cars) +
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method='lm', se = FALSE) +
+  theme_bw()
+
+```
+### Plotting DEG Analysis
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+How many genes? --> 5196
+How many upregulated --> 127
+```{r}
+nrow(genes)
+table(genes$State)
+sum(genes$State == 'up')
+```
+```{r}
+ggplot(genes) +
+  aes(x = Condition1, y = Condition2) +
+  geom_point()
+
+p <- ggplot(genes) +
+  aes(x=Condition1, y=Condition2, col=State) +
+  geom_point()
+
+p
+```
+
+To change the legend colors and axes titles of p
+```{r}
+p + scale_colour_manual( values=c("blue","gray","red") ) +
+  labs(title = "Gene Expression Changes Upon Drug Treatment",
+       x = "Control, no drug", y = "Drug Treatment")
+```
+
+### Gapminder
+
+Plot GDP per capita against life expectancy from gapminder dataset
+```{r}
+library(gapminder)
+library(dplyr)
+
+gapminder_2007 <- gapminder %>% filter(year==2007)
+
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp) +
+  geom_point(alpha = 0.4)
+```
+How many countries are in this dataset? --> 142
+How many years? --> 12
+
+```{r}
+length(unique(gapminder$country))
+length(unique(gapminder$year))
+range(gapminder$year)
+```
+Smallest population? Which country?
+
+```{r}
+ind <- which.min(gapminder$pop)
+ind
+
+gapminder$country[ind]
+```
+```{r}
+gapminder[ind,]
+```
+
+```{r}
+ggplot(gapminder) +
+  aes(x=gdpPercap, y=lifeExp) +
+  geom_point(alpha = 0.4)
+
+ggplot(gapminder) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.4)
+```
+
+Splitting by continent
+```{r}
+ggplot(gapminder) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.4) +
+  facet_wrap(~continent)
+
+```

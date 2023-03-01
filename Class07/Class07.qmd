@@ -1,0 +1,144 @@
+---
+title: "Class 7: Machine Learning 1"
+author: "Challana Tea"
+format: pdf
+---
+
+In this class, we will explore and get practice with clustering and Principle Component Analysis (PCA)
+
+#Clustering with K-means
+
+First we will make up some data to cluster where we know what the result should be.
+
+```{r}
+hist(rnorm(300000, mean=-3))
+```
+I want a little vector with two groupings in it:
+
+```{r}
+tmp <- c(rnorm(30, -3), rnorm(30, +3))
+x <- data.frame(x=tmp, y=rev(tmp))
+head(x)
+```
+
+Let's have a look:
+
+```{r}
+plot(x)
+```
+
+```{r}
+km <- kmeans(x, centers = 2)
+km
+```
+
+It is important to not just run the analysis but to be able to get your important results back in a way that we can do things with them.
+
+> Q. How do I find the cluster sizes
+
+```{r}
+km$size
+```
+> Q. How about the cluster centers?
+
+```{r}
+km$centers
+```
+
+> Q. How about the main result - the cluster assignment vector?
+
+```{r}
+km$cluster
+```
+
+> Q. Can we make a summary figure showing our clustering result?
+- The points colored by cluster assignment and maybe add the cluster centers as a different color?
+
+```{r}
+plot(x, col=c("red", "blue"))
+```
+```{r}
+plot(x, col=km$cluster)
+```
+
+I need 3 things: data, aes, geoms
+```{r}
+library(ggplot2)
+ggplot(x) +
+  aes(x,y) +
+  geom_point(col=km$cl)
+```
+
+```{r}
+# Make up a color vector
+mycols <- rep("gray", 60)
+mycols
+```
+
+```{r}
+plot(x, col=mycols)
+```
+
+Let's highlight points 10, 12 and 20
+
+```{r}
+mycols[c(10,12,20)] <- "red"
+plot(x, col=mycols)
+```
+
+Play with different numbers and centers
+```{r}
+km <- kmeans(x, centers=3)
+plot(x, col=km$cluster)
+```
+
+```{r}
+km$tot.withinss
+```
+What we want to do is try out different numbers of K from 1 to 7. We can write a `for` loop to do this for us and store the `$tot.withinss` each time.
+
+```{r}
+totss <- NULL
+k <- 1:7
+
+for(i in k) {
+  totss <- c(totss,kmeans(x, centers=i)$tot.withinss)
+}
+```
+
+```{r}
+plot(totss, typ="o")
+```
+#Hierarchical Clustering
+
+We can not just give the `hclust()` function of input data `x` like we did for the `kmeans()`.
+
+We need to first calculate a "distance matrix". The `dist()` function by default will calculate euclidean distance.
+
+```{r}
+d <- dist(x)
+hc <- hclust(d)
+hc
+```
+
+The print out is not very helpful, but the plot method is useful
+
+```{r}
+plot(hc)
+abline(h=10, col="red", lty=2)
+```
+
+To get my all important cluster membership vector out of a hclust object I can use the `cutree()`
+```{r}
+cutree(hc,h=10)
+```
+
+You can also set a `k=` argument to `cutree()`
+```{r}
+grps <- cutree(hc, k=2)
+```
+
+```{r}
+plot(x, col=grps)
+```
+

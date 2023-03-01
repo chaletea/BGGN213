@@ -1,0 +1,157 @@
+---
+title: "Class 9: Structural Bioinformatics"
+author: "Challana Tea"
+format: pdf
+---
+
+## What is in the PDB databse?
+
+```{r}
+pdbstats <- read.csv('pdb.csv', row.names = 1)
+knitr::kable(pdbstats)
+```
+
+> Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy.
+
+```{r}
+pdbstats$X.ray
+as.numeric(pdbstats$X.ray)
+```
+
+The commas are converting values containing them to NA values
+
+```{r}
+n.xray <- sum(as.numeric(gsub(",","", pdbstats$X.ray)))
+n.xray
+```
+
+```{r}
+n.em <- sum(as.numeric(gsub(",","", pdbstats$EM)))
+n.total <- sum(as.numeric(gsub(",","", pdbstats$Total)))
+
+round(((n.xray + n.em)/n.total), 2)
+```
+
+```{r}
+rm_comma_sum <- function(filecolumn) {
+  sum(as.numeric(gsub(",","", filecolumn)))
+}
+```
+
+```{r}
+rm_comma_sum(pdbstats$X.ray)/rm_comma_sum(pdbstats$Total)
+round(n.xray/n.total, 2)
+```
+
+> Q2: What proportion of structures in the PDB are protein?
+
+```{r}
+round((rm_comma_sum(pdbstats$Total[1])/n.total), 2)
+```
+
+> Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+# Using the Molstar viewer
+
+> Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure?
+
+The structure has only been resolved to 2 A, which is above the resolution needed to see hydrogen.
+
+> Q5: There is a critical "conserved" water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have
+
+H 308
+
+> Q6: Generate and save a figure clearly showing the two distinct chains of HIV-protease along with the ligand. You might also consider showing the catalytic residues ASP 25 in each chain and the critical water (we recommend "Ball & Stick" for these side-chains). Add this figure to your Quarto document.
+
+![Fig. 1: A rendering of HIV-1 Pr active site with a bound ligand](1HSG-1.png){fig-align="center"}
+
+# Let's do some bioinformatics
+
+Use the bio3D package for structural bioinformatics.
+
+```{r}
+library(bio3d)
+p <- read.pdb("1hsg")
+```
+```{r}
+p
+```
+```{r}
+head(p$atom)
+```
+```{r}
+p$atom[1,'resid']
+p$atom$resid[1]
+aa321(p$atom$resid[1])
+```
+
+# Normal Mode Analysis (NMA)
+```{r}
+#Read an input structure
+adk <- read.pdb('6s36')
+```
+```{r}
+adk
+```
+```{r}
+#NMA
+m <- nma(adk)
+```
+```{r}
+plot(m)
+```
+
+Make a video of this motion for Molstar
+```{r}
+#Make a trajectory file
+mktrj(m, file="adk_m7.pdb")
+```
+
+# PCA - Comparative structure analysis of Adenylate Kinase
+
+First, extract the sequence
+```{r}
+library(bio3d)
+aa <- get.seq("1ake_A")
+```
+```{r}
+aa
+```
+```{r}
+#b <- blast.pdb(aa)
+#hits <- plot(b)
+# hits
+```
+
+```{r}
+hits <- NULL
+hits$pdb.id <- c('1AKE_A','6S36_A','6RZE_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','3GMT_A','4PZL_A')
+```
+
+```{r}
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+# Align and Superimpose
+
+```{r}
+#Align related pdbs
+pdbs <- pdbaln(files, fit = TRUE, exefile='msa')
+```
+```{r}
+ids <- basename.pdb(pdbs$id)
+graphics.off()
+par(mar=c(0.5,0.5,0.5,0))
+plot(pdbs, labels=ids, width = 5, height = 4)
+```
+
+
+```{r}
+#Run a PCA
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+Make a trajectory of the displacements captured by PCA
+```{r}
+mktrj(pc.xray, pc = 1, file = "pc_1.pdb")
+```
+

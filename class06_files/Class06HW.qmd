@@ -1,0 +1,54 @@
+---
+title: "Class 6: Homework Function"
+author: "Challana Tea"
+format: pdf
+---
+
+The provided code that we want to improve and adapt to be more general for any protein-drug combination.
+Install package bio3D with install.packages() before running code.
+
+```{r}
+library(bio3d)
+
+id <- "4AKE"
+pdb <- read.pdb(id)
+
+pdb.chainA <- trim.pdb(pdb, chain="A", elety="CA")
+
+plotb3(pdb.chainA$atom$b, sse=pdb.chainA, typ="l", ylab="Bfactor")
+
+```
+
+
+```{r}
+#' Produce a B-factor plot of a PDB file
+#'
+#'@param id The pdb code of your input structure.
+#'
+#'@return a plot of B-factor favlues
+#'
+#'@examples
+#'  pdbplot("4AKE")
+
+plotpdb <- function(id) {
+  # Read the input PDB file
+  pdb <- read.pdb(id)
+  # Extract a subset of chain A
+  pdb.chain <- trim.pdb(pdb, chain="A", elety="CA")
+  plotb3(pdb.chain$atom$b, sse=pdb.chain, typ="l", ylab="Bfactor")
+}
+```
+
+```{r}
+plotpdb('4AKE')
+```
+```{r}
+plotpdb('1AKE')
+```
+
+
+```{r}
+plotpdb('1E4Y')
+```
+
+
